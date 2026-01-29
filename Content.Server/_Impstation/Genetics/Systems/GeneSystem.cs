@@ -16,6 +16,10 @@ public sealed class GeneSystem : SharedGeneSystem
 
     public Dictionary<BaseGene, EntityUid> _freshGenes = new Dictionary<BaseGene, EntityUid>();
 
+    /// <summary>
+    /// TODO: Figure out if making Genes wait before awakening is even needed. Probably not now.
+    /// </summary>
+    /// <param name="frameTime"></param>
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -27,6 +31,15 @@ public sealed class GeneSystem : SharedGeneSystem
         }
     }
 
+    /// <summary>
+    /// Handles adding a Gene to an Entity
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="entity"></param>
+    /// <param name="gene"></param>
+    /// <param name="metadata"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
     public bool AddGeneToEntity<T>(EntityUid entity, T gene, MetaDataComponent? metadata = null) where T : BaseGene
     {
         //if (!MetaQuery.Resolve(entity, ref metadata, false))

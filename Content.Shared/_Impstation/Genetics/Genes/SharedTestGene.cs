@@ -8,6 +8,4 @@ namespace Content.Shared._Impstation.Genetics.Genes;
 
 public abstract partial class SharedTestGene : BaseGene
 {
-
-    //public virtual void TriggerExplosion(ref DamageExamineEvent args) { }
 }

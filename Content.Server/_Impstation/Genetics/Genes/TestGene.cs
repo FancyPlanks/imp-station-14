@@ -21,7 +21,6 @@ public sealed partial class TestGene : SharedTestGene
     public override void OnGeneInitialise(IEntityManager entManager, SharedGeneSystem system)
     {
         base.OnGeneInitialise(entManager, system);
-        //var geneSystem = _entManager.System<GeneSystem>();
         system.SubscribeMeToEvent<GeneticsHostComponent, OnIrradiatedEvent>(TriggerExplosion);
     }
 
@@ -30,15 +29,17 @@ public sealed partial class TestGene : SharedTestGene
         base.OnGeneAdded(entManager, host);
     }
 
+    /// <summary>
+    /// Currently the effect is the moment a mob is irradiated, they explode bad style
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="args"></param>
     public void TriggerExplosion(Entity<GeneticsHostComponent> entity, ref OnIrradiatedEvent args)
     {
         if (!DoesEntityHaveGene("Test", entity.Comp))
             return;
 
         var explosionSystem = _entManager.System<SharedExplosionSystem>();
-
-        //if (entity.Owner != _host)
-        //    return;
 
         explosionSystem.QueueExplosion(
             entity.Comp.Genes["Test"]._host,

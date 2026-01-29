@@ -13,6 +13,14 @@ using System.Text;
 
 namespace Content.Shared._Impstation.Genetics;
 
+/// <summary>
+/// "Huh this seems familiar to the ComponentFactory" well buddy have I got news for you
+/// All of this was done purely so Genes could be stuck to just their class with a [RegisterGene] tag
+/// I have no doubt that this is not the most "optimal" way to do this but it gets me where I want to go
+/// </summary>
+/// <param name="_typeFactory"></param>
+/// <param name="_reflectionManager"></param>
+/// <param name="_logManager"></param>
 [Virtual]
 public class GeneFactory(
     IDynamicTypeFactory _typeFactory,
@@ -57,6 +65,9 @@ public class GeneFactory(
         return name;
     }
 
+    /// <summary>
+    /// Automatically registers any Gene so long as it is tagged with [RegisterGene]
+    /// </summary>
     public void DoAutoRegistration()
     {
         var types = _reflectionManager.FindTypesWithAttribute<RegisterGeneAttribute>().ToArray();
