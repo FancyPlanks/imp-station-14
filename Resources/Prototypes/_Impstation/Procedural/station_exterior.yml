@@ -1,46 +1,8 @@
 # Large asteroids, typically 1
 - type: dungeonConfig
-  id: BlobOmniAsteroid
+  id: ExteriorMixed
   # Floor generation
-  bounds: 50, 50
-  overwritableTiles:
-    - Lattice
-    - FloorAsteroidSand
-    - FloorPlanetGrass
-  layers:
-
-  - !type:NoiseDistanceDunGen
-    #tileCap: 2000
-    #capStd: 32
-    #iterations: 3
-    size: 1, 1
-    distanceConfig: !type:DunGenEuclideanSquaredDistance
-      blendWeight: 0.80
-    layers:
-      - tile: FloorAsteroidSand
-        threshold: 0.20
-        noise:
-          frequency: 0.05
-          noiseType: OpenSimplex2
-          fractalType: FBm
-          octaves: 2
-          lacunarity: 2
-      - tile: Lattice
-        threshold: 0.020
-        noise:
-          frequency: 0.065
-          noiseType: OpenSimplex2
-          fractalType: FBm
-          octaves: 2
-          lacunarity: 2
-  - !type:BiomeDunGen
-    biomeTemplate: OmniCaves
-
-# Large asteroids, typically 1
-- type: dungeonConfig
-  id: BlobOmniFloralAsteroid
-  # Floor generation
-  bounds: 50, 50
+  bounds: 400, 400
   overwritableTiles:
     - Lattice
   layers:
@@ -54,15 +16,23 @@
       blendWeight: 0.80
     layers:
       - tile: FloorPlanetGrass
-        threshold: 0.20
+        threshold: 0.80
         noise:
           frequency: 0.05
           noiseType: OpenSimplex2
           fractalType: FBm
           octaves: 2
           lacunarity: 2
+      - tile: FloorAsteroidSand
+        threshold: 0.60
+        noise:
+          frequency: 0.05
+          noiseType: OpenSimplex2
+          fractalType: FBm
+          octaves: 3
+          lacunarity: 2
       - tile: Lattice
-        threshold: 0.020
+        threshold: 0.50
         noise:
           frequency: 0.065
           noiseType: OpenSimplex2
@@ -71,6 +41,8 @@
           lacunarity: 2
   - !type:BiomeDunGen
     biomeTemplate: OmniGrass
+  - !type:BiomeDunGen
+    biomeTemplate: OmniCaves
 
 # ============================================================================
 
@@ -105,7 +77,7 @@
       entities:
       - FloraStalagmite
     - !type:BiomeEntityLayer
-      threshold: -0.45
+      threshold: -0.7
       invert: true
       noise:
         seed: 0
@@ -117,7 +89,7 @@
       allowedTiles:
         - FloorAsteroidSand
       entities:
-        - AsteroidRock
+        - WallRock
     - !type:BiomeDummyLayer
       id: Loot
 
@@ -188,3 +160,5 @@
         - FlowersBROne
         - FlowersBRTwo
         - FlowersBRThree
+
+# ============================================================================

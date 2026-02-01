@@ -7,10 +7,15 @@ using Content.Shared._Impstation.Procedural.TerrainOnGrid;
 using Content.Shared.CCVar;
 using Content.Shared.Construction.EntitySystems;
 using Content.Shared.Coordinates;
+using Content.Shared.Destructible.Thresholds;
 using Content.Shared.GameTicking;
+using Content.Shared.Hands.Components;
 using Content.Shared.Maps;
 using Content.Shared.Physics;
 using Content.Shared.Procedural;
+using Content.Shared.Procedural.DungeonLayers;
+using Content.Shared.Random;
+using Content.Shared.Random.Helpers;
 using Content.Shared.Station;
 using Content.Shared.Station.Components;
 using NetCord;
@@ -82,6 +87,9 @@ public sealed partial class TerrainOnGridSystem : SharedTerrainOnGridSystem
     private readonly JobQueue _dungeonJobQueue = new(DungeonJobTime);
     private readonly Dictionary<DungeonJob, CancellationTokenSource> _dungeonJobs = new();
 
+    private readonly ProtoId<WeightedRandomPrototype> _asteroidOreWeights = "AsteroidOre";
+    private readonly MinMax _asteroidOreCount = new(7, 20);
+
     private List<string> _templates = new List<string>
     {
         "BlobOmniAsteroid",
@@ -110,7 +118,13 @@ public sealed partial class TerrainOnGridSystem : SharedTerrainOnGridSystem
             _notGenerated = false;
             GetGrid();
 
-            for(int i = 0; i < 10; i++)
+            //if (!_prototype.TryIndex<DungeonConfigPrototype>("ExteriorMixed", out var dungeon))
+            //{
+            //    return;
+            //}
+            //GenerateTerrain(dungeon, 555, GetLocationOnStation(true));
+            
+            for (int i = 0; i < 10; i++)
             {
                 var result = _templates[_random.Next(0, _templates.Count)];
                 if (!_prototype.TryIndex<DungeonConfigPrototype>(result, out var dungeon))
@@ -250,7 +264,7 @@ public sealed partial class TerrainOnGridSystem : SharedTerrainOnGridSystem
         {
             return;
         }
-        GenerateTerrain(dungeon, 555, GetLocationOnStation());
+        //GenerateTerrain(dungeon, 555, GetLocationOnStation());
     }
 
     /// <summary>
@@ -258,7 +272,7 @@ public sealed partial class TerrainOnGridSystem : SharedTerrainOnGridSystem
     /// hits a flooring surface to place the asteroid
     /// </summary>
     /// <returns></returns>
-    public Vector2i GetLocationOnStation()
+    public Vector2i GetLocationOnStation(bool skipWallFind = false)
     {
         var location = new Vector2i(0,0);
         var stationPos = (Vector2i)_transform.GetMapCoordinates(_stationGrid).Position;
@@ -300,6 +314,12 @@ public sealed partial class TerrainOnGridSystem : SharedTerrainOnGridSystem
                 break;
         }
 
+        if(skipWallFind)
+        {
+            Log.Info($"Generating Terrain from point {randomPoint} on boundary wall {wall}");
+            return randomPoint;
+        }
+
         // Direction from the initial asteroid spawn to the station center
         var entCoords = new EntityCoordinates(_stationGrid, randomPoint);
         var mapCoords = new EntityCoordinates(_stationGrid, _stationCenter);
@@ -318,7 +338,7 @@ public sealed partial class TerrainOnGridSystem : SharedTerrainOnGridSystem
             --maxLoops;
 
             // Fire a ray from the initial asteroid spawn towards the station center
-            var ray = new CollisionRay(ent.Position, dir, (int)CollisionGroup.Impassable);
+            var ray = new CollisionRay(ent.Position, dir, (int)CollisionGroup.AllMask);
             var rayCastResults = _physics.IntersectRay(map.MapId, ray, 10);
             var result = rayCastResults.FirstOrNull();
 
@@ -366,6 +386,20 @@ public sealed partial class TerrainOnGridSystem : SharedTerrainOnGridSystem
             coordinates,
             cancelToken.Token,
             _random);
+
+        var oreCount = _random.Next(_asteroidOreCount.Min, _asteroidOreCount.Max);
+        var layers = new Dictionary<string, int>();
+        var weightedProto = _prototype.Index(_asteroidOreWeights);
+        var rand = new System.Random(seed);
+        for (var i = 0; i < oreCount; i++)
+        {
+            var ore = weightedProto.Pick(rand);
+            gen.Layers.Add(_prototype.Index<OreDunGenPrototype>(ore));
+
+            var layerCount = layers.GetOrNew(ore);
+            layerCount++;
+            layers[ore] = layerCount;
+        }
 
         _dungeonJobs.Add(job, cancelToken);
         _dungeonJobQueue.EnqueueJob(job);
