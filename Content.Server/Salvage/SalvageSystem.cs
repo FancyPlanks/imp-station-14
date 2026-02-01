@@ -18,6 +18,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Timing;
 using Content.Shared.Labels.EntitySystems;
 using Robust.Shared.EntitySerialization.Systems;
+using Content.Server._Impstation.Procedural.TerrainOnGrid;
 
 namespace Content.Server.Salvage
 {
@@ -33,6 +34,7 @@ namespace Content.Server.Salvage
         [Dependency] private readonly AnchorableSystem _anchorable = default!;
         [Dependency] private readonly BiomeSystem _biome = default!;
         [Dependency] private readonly DungeonSystem _dungeon = default!;
+        [Dependency] private readonly TerrainOnGridSystem _terrain = default!; // IMP
         [Dependency] private readonly GravitySystem _gravity = default!;
         [Dependency] private readonly LabelSystem _labelSystem = default!;
         [Dependency] private readonly MapLoaderSystem _loader = default!;

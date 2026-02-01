@@ -18,6 +18,18 @@ public partial class DungeonConfig
     public bool ReserveTiles;
 
     /// <summary>
+    /// [IMP] The bounds of our space. Handy for if you need to check something within the dungeon limits
+    /// </summary>
+    [DataField]
+    public Vector2i Bounds;
+
+    /// <summary>
+    /// [IMP] Tiles that the generator can overwrite if found
+    /// </summary>
+    [DataField]
+    public List<string> OverwritableTiles = new();
+
+    /// <summary>
     /// Minimum times to run the config.
     /// </summary>
     [DataField]

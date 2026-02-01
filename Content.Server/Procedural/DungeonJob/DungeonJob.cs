@@ -1,10 +1,8 @@
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Content.Server.Decals;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
+using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
 using Content.Shared.Construction.EntitySystems;
 using Content.Shared.EntityTable;
@@ -19,10 +17,17 @@ using Robust.Server.Physics;
 using Robust.Shared.CPUJob.JobQueues;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
+using System;
+using System.Linq;
+using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
+using System.Threading;
+using System.Threading.Tasks;
 using IDunGenLayer = Content.Shared.Procedural.IDunGenLayer;
 
 namespace Content.Server.Procedural.DungeonJob;
@@ -59,6 +64,20 @@ public sealed partial class DungeonJob : Job<List<Dungeon>>
     private readonly EntityCoordinates? _targetCoordinates;
 
     private readonly ISawmill _sawmill;
+    private readonly IRobustRandom? _random;
+
+    private int _spacingDist = 1;
+    private List<Vector2> directions =
+        new List<Vector2> { 
+            new Vector2(1, 0), // RIGHT
+            new Vector2(1, 1), // TOP RIGHT
+            new Vector2(1, -1), // BOTTOM RIGHT
+            new Vector2(-1, -1), // BOTTOM LEFT
+            new Vector2(0, 1), // TOP
+            new Vector2(0, -1), //TOP BOTTOM 
+            new Vector2(-1, 1), // 
+            new Vector2(-1, 0)
+            };
 
     public DungeonJob(
         ISawmill sawmill,
@@ -79,7 +98,8 @@ public sealed partial class DungeonJob : Job<List<Dungeon>>
         int seed,
         Vector2i position,
         EntityCoordinates? targetCoordinates = null,
-        CancellationToken cancellation = default) : base(maxTime, cancellation)
+        CancellationToken cancellation = default,
+        IRobustRandom? random = null) : base(maxTime, cancellation)
     {
         _sawmill = sawmill;
         _entManager = entManager;
@@ -106,6 +126,7 @@ public sealed partial class DungeonJob : Job<List<Dungeon>>
         _seed = seed;
         _position = position;
         _targetCoordinates = targetCoordinates;
+        _random = random;
     }
 
     /// <summary>
@@ -159,17 +180,98 @@ public sealed partial class DungeonJob : Job<List<Dungeon>>
         return dungeons;
     }
 
+    private bool IsInWhitelist(List<ITileDefinition> tiles, TileRef tile)
+    {
+        foreach(var oTile in tiles)
+        {
+            if (tile.Tile.TypeId == oTile.TileId)
+                return true;
+        }
+        return false;
+    }
+
+    private int Variance()
+    {
+        var value = 0;
+        if (_random != null)
+            value = _random.Next(-1, _spacingDist + 1);
+        return value;
+    }
+
     protected override async Task<List<Dungeon>?> Process()
     {
         _sawmill.Info($"Generating dungeon {_gen} with seed {_seed} on {_entManager.ToPrettyString(_gridUid)}");
         _grid.CanSplit = false;
         var random = new Random(_seed);
-        var position = (_position + random.NextPolarVector2(_gen.MinOffset, _gen.MaxOffset)).Floored();
-
+        var position1 = (_position + random.NextPolarVector2(_gen.MinOffset, _gen.MaxOffset)).Floored();
+        var position = new Vector2i(0, 0);
         // Tiles we can no longer generate on due to being reserved elsewhere.
-        var reservedTiles = new HashSet<Vector2i>();
 
-        var dungeons = await GetDungeons(position, _gen, _gen.Layers, reservedTiles, _seed, random);
+        // Imp edit start
+        //var reservedTiles = GetMapTiles();//new HashSet<Vector2i>();
+
+        var reservedTiles = new HashSet<Vector2i>();
+        var queryDocks = _entManager.EntityQueryEnumerator<DockingComponent>();
+        var maxDistanceToDock = 40;
+
+        var mapCoords = new MapCoordinates();
+        var entityCoords = new EntityCoordinates(_gridUid, position1);
+        mapCoords = _transform.ToMapCoordinates((EntityCoordinates)entityCoords);
+            
+
+        var box = Box2.CenteredAround(mapCoords.Position, new Vector2(_gen.Bounds.X, _gen.Bounds.Y));
+
+        var mapTiles = _maps.GetTilesEnumerator(_gridUid, _grid, box, false);
+
+        List<ITileDefinition> oTiles = new();
+
+        foreach (var oTile in _gen.OverwritableTiles)
+        {
+            oTiles.Insert(0, _tileDefManager[oTile]);
+        }
+
+        while (mapTiles.MoveNext(out TileRef tile))
+        {
+            var addTile = false;
+            while(queryDocks.MoveNext(out var dock))
+            {
+                var localPos = _entManager.GetComponent<TransformComponent>(dock.Owner).LocalPosition;
+
+                var dist = (localPos - new Vector2(tile.X, tile.Y));
+                var abs1 = Math.Abs(tile.X - localPos.X);
+                var abs2 = Math.Abs(tile.Y - localPos.Y);
+                if (abs1 <= maxDistanceToDock && abs2 <= maxDistanceToDock)
+                {
+                    addTile = true;
+                    break;
+                }
+            }
+
+            for (int i = 0; i < 8 && !addTile; ++i)
+            {
+                if (IsInWhitelist(
+                    oTiles,
+                    _maps.GetTileRef(
+                        (_gridUid, _grid),
+                        _transform.ToMapCoordinates(
+                            new EntityCoordinates(
+                                _gridUid, new Vector2(tile.X, tile.Y)
+                                + (directions[i] * (_spacingDist + Variance())))))))
+                {
+                    addTile = true;
+                    break;
+                }
+            }
+
+            if ((tile.Tile == Tile.Empty || IsInWhitelist(oTiles, tile)) && !addTile)
+                continue;
+
+            reservedTiles.Add((tile.X, tile.Y));
+        }
+
+        // Imp edit end
+
+        var dungeons = await GetDungeons(position1, _gen, _gen.Layers, reservedTiles, _seed, random);
         // To make it slightly more deterministic treat this RNG as separate ig.
 
         // Post-processing after finishing loading.
@@ -271,7 +373,7 @@ public sealed partial class DungeonJob : Job<List<Dungeon>>
                 await PostGen(entityTable, dungeons, reservedTiles, random);
                 break;
             case NoiseDistanceDunGen distance:
-                dungeons.Add(await GenerateNoiseDistanceDunGen(position, distance, reservedTiles, seed, random));
+                dungeons.Add(await GenerateNoiseDistanceDunGen(position, distance, reservedTiles, seed, random, _gen.Bounds)); // Imp Edit (Bounds)
                 break;
             case NoiseDunGen noise:
                 dungeons.Add(await GenerateNoiseDunGen(position, noise, reservedTiles, seed, random));

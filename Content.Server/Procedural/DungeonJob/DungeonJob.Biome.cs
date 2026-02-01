@@ -1,11 +1,13 @@
-using System.Threading.Tasks;
 using Content.Server.Parallax;
+using Content.Server.Shuttles.Components;
 using Content.Shared.Maps;
 using Content.Shared.Parallax.Biomes;
+using Content.Shared.Physics;
 using Content.Shared.Procedural;
 using Content.Shared.Procedural.PostGeneration;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
+using System.Threading.Tasks;
 
 namespace Content.Server.Procedural.DungeonJob;
 
@@ -37,6 +39,18 @@ public sealed partial class DungeonJob
                 if (!dunGen.TileMask.Contains(((ContentTileDefinition)_tileDefManager[tileRef.Value.Tile.TypeId]).ID))
                     continue;
             }
+
+            // IMP start
+            // This makes sure we're not trying to pace something on an occupied tile
+            // Fantastic for stopping things like walls overlapping
+            if (!_anchorable.TileFree((_gridUid, _grid),
+                node,
+                (int)CollisionGroup.MachineLayer,
+                (int)CollisionGroup.MachineLayer))
+            {
+                continue;
+            }
+            // IMP end
 
             // Need to set per-tile to override data.
             if (biomeSystem.TryGetTile(node, indexedBiome.Layers, seed, (_gridUid, _grid), out var tile))

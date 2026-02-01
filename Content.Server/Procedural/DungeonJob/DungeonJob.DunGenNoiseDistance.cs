@@ -1,10 +1,11 @@
-using System.Numerics;
-using System.Threading.Tasks;
 using Content.Shared.Maps;
+using Content.Shared.Physics;
 using Content.Shared.Procedural;
 using Content.Shared.Procedural.Distance;
 using Content.Shared.Procedural.DungeonGenerators;
 using Robust.Shared.Map;
+using System.Numerics;
+using System.Threading.Tasks;
 
 namespace Content.Server.Procedural.DungeonJob;
 
@@ -25,7 +26,8 @@ public sealed partial class DungeonJob
         NoiseDistanceDunGen dungen,
         HashSet<Vector2i> reservedTiles,
         int seed,
-        Random random)
+        Random random,
+        Vector2i bounds) // IMP
     {
         var tiles = new List<(Vector2i, Tile)>();
         var matrix = Matrix3Helpers.CreateTranslation(position);
@@ -37,7 +39,7 @@ public sealed partial class DungeonJob
 
         // First we have to find a seed tile, then floodfill from there until we get to noise
         // at which point we floodfill the entire noise.
-        var area = Box2i.FromDimensions(-dungen.Size / 2, dungen.Size);
+        var area = Box2i.FromDimensions(-bounds / 2, bounds); // Imp Edit
         var roomTiles = new HashSet<Vector2i>();
         var width = (float) area.Width;
         var height = (float) area.Height;
@@ -66,10 +68,10 @@ public sealed partial class DungeonJob
                     if (value < layer.Threshold)
                         continue;
 
+
                     var tileDef = _tileDefManager[layer.Tile];
                     var variant = _tile.PickVariant((ContentTileDefinition) tileDef, random);
                     var adjusted = Vector2.Transform(node + _grid.TileSizeHalfVector, matrix).Floored();
-
                     // Do this down here because noise has a much higher chance of failing than reserved tiles.
                     if (reservedTiles.Contains(adjusted))
                     {
@@ -108,5 +110,10 @@ public sealed partial class DungeonJob
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+
+    private bool IsInWhitelist()
+    {
+        return false;
     }
 }

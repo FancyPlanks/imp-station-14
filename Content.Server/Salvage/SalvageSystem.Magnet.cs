@@ -132,6 +132,7 @@ public sealed partial class SalvageSystem
     /// </summary>
     private void EndMagnet(Entity<SalvageMagnetDataComponent> data)
     {
+        /*
         if (data.Comp.ActiveEntities != null)
         {
             // Handle mobrestrictions getting deleted
@@ -141,7 +142,7 @@ public sealed partial class SalvageSystem
             {
                 if (data.Comp.ActiveEntities.Contains(salvMob.LinkedEntity) && _mobState.IsAlive(salvUid, salvMobState))
                 {
-                    QueueDel(salvUid);
+                    //QueueDel(salvUid);
                 }
             }
 
@@ -172,8 +173,8 @@ public sealed partial class SalvageSystem
                     continue;
 
                 // Can't parent directly to map as it runs grid traversal.
-                _detachEnts.Add(((mobUid, xform), xform.MapUid.Value, _transform.GetWorldPosition(xform)));
-                _transform.DetachEntity(mobUid, xform);
+                //_detachEnts.Add(((mobUid, xform), xform.MapUid.Value, _transform.GetWorldPosition(xform)));
+                //_transform.DetachEntity(mobUid, xform);
             }
 
             // Go and cleanup the active ents.
@@ -189,7 +190,7 @@ public sealed partial class SalvageSystem
 
             data.Comp.ActiveEntities = null;
         }
-
+        */
         data.Comp.EndTime = null;
         UpdateMagnetUIs(data);
     }
@@ -206,7 +207,7 @@ public sealed partial class SalvageSystem
             seed = (int) (seed / 10f) * 10;
 
 
-            if (i >= data.Comp.OfferCount / 2)
+            if (i >= data.Comp.OfferCount)
             {
                 seed++;
             }
@@ -215,7 +216,7 @@ public sealed partial class SalvageSystem
             data.Comp.Offered.Add(seed);
         }
 
-        data.Comp.NextOffer = _timing.CurTime + data.Comp.OfferCooldown;
+        data.Comp.NextOffer = _timing.CurTime + (data.Comp.OfferCooldown);
         UpdateMagnetUIs(data);
     }
 
@@ -296,7 +297,8 @@ public sealed partial class SalvageSystem
         {
             case AsteroidOffering asteroid:
                 var grid = _mapManager.CreateGridEntity(salvMap);
-                await _dungeon.GenerateDungeonAsync(asteroid.DungeonConfig, grid.Owner, grid.Comp, Vector2i.Zero, seed);
+                //await _terrain.GenerateDungeonAsync(asteroid.DungeonConfig, grid.Owner, grid.Comp, Vector2i.Zero, seed);
+                await _terrain.GenerateTerrainAsync(asteroid.DungeonConfig, seed, _terrain.GetLocationOnStation());
                 break;
             case DebrisOffering debris:
                 var debrisProto = _prototypeManager.Index<DungeonConfigPrototype>(debris.Id);
@@ -325,7 +327,7 @@ public sealed partial class SalvageSystem
             Report(magnet.Owner, MagnetChannel, "salvage-system-announcement-spawn-no-debris-available");
             return;
         }
-
+        
         var mapChildren = salvMapXform.ChildEnumerator;
 
         while (mapChildren.MoveNext(out var mapChild))
@@ -425,16 +427,16 @@ public sealed partial class SalvageSystem
         }
 
         // IMP Change end ^
-        //Report(magnet.Owner, MagnetChannel, "salvage-system-announcement-arrived", ("timeLeft", data.Comp.ActiveTime.TotalSeconds));
-        _mapSystem.DeleteMap(salvMapXform.MapID);
+        Report(magnet.Owner, MagnetChannel, "salvage-system-announcement-arrived", ("timeLeft", data.Comp.ActiveTime.TotalSeconds));
+        //_mapSystem.DeleteMap(salvMapXform.MapID);
 
         data.Comp.Announced = false;
 
+        
         var active = new SalvageMagnetActivatedEvent()
         {
             Magnet = magnet,
         };
-
         RaiseLocalEvent(ref active);
     }
 

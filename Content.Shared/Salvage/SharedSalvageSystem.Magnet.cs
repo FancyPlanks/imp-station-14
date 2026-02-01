@@ -17,16 +17,16 @@ public abstract partial class SharedSalvageSystem
     private readonly Dictionary<ISalvageMagnetOffering, float> _offeringWeights = new()
     {
         { new AsteroidOffering(), 4.5f },
-        { new DebrisOffering(), 3.5f },
-        { new SalvageOffering(), 2.0f },
+        { new DebrisOffering(), 0.0f },
+        { new SalvageOffering(), 0.0f },
     };
 
     private readonly List<ProtoId<DungeonConfigPrototype>> _asteroidConfigs = new()
     {
-        "BlobAsteroid",
-        "ClusterAsteroid",
-        "SpindlyAsteroid",
-        "SwissCheeseAsteroid"
+        "BlobOmniAsteroid"//,
+        //"ClusterAsteroid",
+        //"SpindlyAsteroid",
+        //"SwissCheeseAsteroid"
     };
 
     private readonly ProtoId<WeightedRandomPrototype> _asteroidOreWeights = "AsteroidOre";
@@ -53,6 +53,7 @@ public abstract partial class SharedSalvageSystem
                 var config = new DungeonConfig
                 {
                     Layers = new(configProto.Layers),
+                    Bounds = new Vector2i(20, 20),
                     MaxCount = configProto.MaxCount,
                     MaxOffset = configProto.MaxOffset,
                     MinCount = configProto.MinCount,
