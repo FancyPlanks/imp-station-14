@@ -123,6 +123,9 @@ public sealed partial class AnimalHusbandrySystemImp : EntitySystem
         _thirst.ModifyThirst(approacher, -approacher.Comp.HungerPerBirth);
         _thirst.ModifyThirst(approached, -partnerComp.HungerPerBirth);
 
+        var ev = new MobBreedEvent(approacher);
+        RaiseLocalEvent(approached, ref ev);
+
         _adminLog.Add(LogType.Action, $"{ToPrettyString(approached)} (carrier) and {ToPrettyString(approacher)} (partner) successfully bred.");
         return true;
     }

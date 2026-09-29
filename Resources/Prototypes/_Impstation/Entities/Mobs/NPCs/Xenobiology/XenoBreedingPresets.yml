@@ -1,0 +1,53 @@
+- type: breedSettings
+  id: SlimeSettings
+  compatibleBreeds:
+    - Slime
+  possibleInfants: !type:GroupSelector
+    children:
+    - id: MobBaseXenoSlime
+      weight: 10
+    - id: MobPinkXenoSlime
+      weight: 10
+
+- type: breedSettings
+  id: PinkSlimeSettings
+  compatibleBreeds:
+    - Slime
+  possibleInfants: !type:GroupSelector
+    children:
+    - id: MobIceXenoSlime
+      weight: 10
+      conditions:
+      - !type:ValidPartnerCondition
+        validPartners:
+        - SlimeIce
+    - id: MobIceXenoSlime
+      weight: 50
+      conditions:
+      - !type:ValidPartnerCondition
+        validPartners:
+        - SlimePink
+    - id: MobBaseXenoSlime
+      weight: 2
+    - id: MobPinkXenoSlime
+      weight: 10
+
+
+- type: breedSettings
+  id: IceSlimeSettings
+  compatibleBreeds:
+    - Slime
+  possibleInfants: !type:GroupSelector
+    children:
+    - id: MobIceXenoSlime
+      weight: 50
+      conditions:
+      - !type:ValidPartnerCondition
+        validPartners:
+        - SlimeIce
+    - id: MobBaseXenoSlime
+      weight: 2
+    - id: MobPinkXenoSlime
+      weight: 10
+    - id: MobIceXenoSlime
+      weight: 10

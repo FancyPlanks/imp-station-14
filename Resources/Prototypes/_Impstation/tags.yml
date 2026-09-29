@@ -427,6 +427,18 @@
   id: ShellSlug
 
 - type: Tag
+  id: Slime
+
+- type: Tag
+  id: SlimeFood
+
+- type: Tag
+  id: SlimeIce
+
+- type: Tag
+  id: SlimePink
+
+- type: Tag
   id: SpacemanFrosting
 
 - type: Tag

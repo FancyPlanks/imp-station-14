@@ -1,0 +1,25 @@
+- type: entity
+  id: OrganSlimeStomach
+  parent: OrganAnimalStomach
+  name: slime stomach
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Stomach
+    specialDigestible:
+      tags:
+      - SlimeFood
+
+- type: entity
+  id: BaseMobSlime
+  abstract: true
+  components:
+  - type: Body
+  - type: EntityTableContainerFill
+    containers:
+      body_organs: !type:AllSelector
+        children:
+        - id: OrganAnimalLungs
+        - id: OrganAnimalHeart
+        - id: OrganSlimeStomach
+        - id: OrganAnimalLiver
+        - id: OrganAnimalKidneys

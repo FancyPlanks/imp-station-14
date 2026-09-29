@@ -100,7 +100,7 @@ public sealed class ImpCCVars : CVars
     ///     If this is set to `-1`, then there is no breedable animal limit.
     /// </remarks>
     public static readonly CVarDef<int> MaxBreedableAnimalsCount =
-        CVarDef.Create("husbandry.max_breedable_animals", 5, CVar.SERVERONLY);
+        CVarDef.Create("husbandry.max_breedable_animals", 80, CVar.SERVERONLY);
 
     /// <summary>
     ///     The range that <see cref="MaxBreedableAnimalsCount"/> will use to check against the limit.

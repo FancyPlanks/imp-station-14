@@ -88,3 +88,9 @@ public enum AnimalGender
     Female,
     None
 }
+
+/// <summary>
+/// Called whenever 2 mobs breed
+/// </summary>
+[ByRefEvent]
+public record struct MobBreedEvent(EntityUid breeder);
